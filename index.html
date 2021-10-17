@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        canvas {
+            background: rgb(12, 10, 10);
+            display: block;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="mycanvas" width="550" height="640"></canvas>
+    <script>
+        const canvas = document.getElementById("mycanvas");
+        const context = canvas.getContext("2d");
+        const planeWidht = canvas.width / 10;
+        const planeHeight = canvas.height / 10;
+        let planeX = canvas.width / 2 - planeWidht / 2;
+        let planeY = canvas.height - planeHeight;
+        let enemyY = canvas.height - planeHeight;
+        const enemies = [];
+        let rightPressed = false;
+        let leftPressed = false;
+        let upPressed = false;
+        let downPressed = false;
+        let misilX = planeX + planeWidht / 2 - 2;
+        let misilY = planeY - 7;
+        const cantEnemies = 8;
+
+        let shut = 0;
+        let score = 0;
+        const win = 0;
+        const enemyImage = new Image();
+        const enemyImpacted = new Image();
+        enemyImage.src = "image/enemy.png";
+        
+        enemyImpacted.src = "image/explote.png";
+
+
+
+
+
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+        document.addEventListener("click", fire);
+
+        function makeEnemies() {
+            for (let r = 0; r < cantEnemies; r++) {
+
+                enemies.push({ x: 0, y: Math.random() * 100, died: 0, impacted: 0, img: enemyImage });
+            }
+        }
+        function keyDownHandler(e) {
+            if (e.code == "ArrowRight") {
+                rightPressed = true;
+            }
+            else if (e.code == 'ArrowLeft') {
+                leftPressed = true;
+            }
+
+        }
+
+
+
+        function keyUpHandler(e) {
+            if (e.code == 'ArrowRight') {
+                rightPressed = false;
+            }
+            else if (e.code == 'ArrowLeft') {
+                leftPressed = false;
+            }
+
+        }
+
+        function mouseMoveHandler(e) {
+            var relativeX = e.clientX;
+            if (relativeX > 0 && relativeX < canvas.width) {
+                planeX = relativeX - planeWidht / 2;
+                if (!shut) {
+                    misilX = relativeX - 2;
+                }
+            }
+        }
+
+        function drawScore() {
+            context.font = "16px Arial";
+            context.fillStyle = "#60F731";
+            context.fillText("Score: " + score, 8, 16);
+        }
+
+
+
+
+        function drawPlane() {
+            const navy = new Image();
+            navy.src = "image/mywarplane.png";
+
+            context.drawImage(navy, planeX, planeY, planeWidht, planeHeight);
+
+
+        }
+
+        function drawEnemies() {
+
+            for (let i = 0; i < cantEnemies; i++) {
+
+                eX = (i * (planeWidht + 15));
+                enemies[i].x = eX;
+                enemies[i].y += 0.2;
+                if (!enemies[i].died) {
+                    context.drawImage(enemies[i].img, eX, enemies[i].y, planeWidht, planeHeight);
+
+                }
+
+            }
+        }
+        function drawMisil() {
+            context.beginPath();
+            context.rect(misilX, misilY, 5, 7);
+            context.fillStyle = "white";
+            context.fill();
+            context.closePath();
+
+        }
+        function fire() {
+            shut = 1;
+
+        }
+
+
+        function firstImpact() {
+            for (b = 0; b < cantEnemies; b++) {
+                if (enemies[b].died === 0 && enemies[b].impacted === 0 && misilX > enemies[b].x && misilX < enemies[b].x + planeWidht && misilY < enemies[b].y + planeHeight && shut === 1) {
+
+                    enemies[b].y -= planeHeight;
+                    
+                    misilY = planeY - 7;
+                    misilX = planeX + planeWidht / 2 - 2;
+                    enemies[b].impacted = 1;
+                    //enemies[b].img=enemyImpacted;
+                    shut = 0;
+
+
+
+                }
+
+            }
+
+        }
+
+        function destroy() {
+            for (b = 0; b < cantEnemies; b++) {
+
+                if (enemies[b].died === 0 && enemies[b].impacted === 1 && misilX > enemies[b].x && misilX < enemies[b].x + planeWidht && misilY < enemies[b].y + planeHeight && shut === 1) {
+
+                    misilY = planeY - 7;
+                    misilX = planeX + planeWidht / 2 - 2;
+                    enemies[b].img = enemyImpacted;
+
+                    enemies[b].died = 1;
+                    shut = 0;
+                    score += 100;
+                }
+
+            }
+            if (score === 800) {
+                drawText("YOU WIN!");
+                return;
+            }
+        }
+
+
+
+
+
+        function drawText(text = "") {
+            context.font = "32px Arial";
+            context.fillStyle = "#60F731";
+            context.fillText(text, canvas.width / 2 - 90, canvas.height / 2);
+        }
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawScore();
+            drawText();
+            drawPlane();
+            drawEnemies();
+            drawMisil();
+            firstImpact();
+            destroy();
+
+
+            if (rightPressed && planeX < canvas.width - planeWidht) {
+                planeX += 4;
+                if (!shut) {
+                    misilX += 4;
+                }
+            }
+            else if (leftPressed && planeX > 0) {
+                planeX -= 4;
+                if (!shut) {
+                    misilX -= 4;
+                }
+            }
+            else if (upPressed && planeY > 0) {
+                planeY -= 8;
+                misilY -= 8;
+            }
+
+            else if (downPressed && planeY < canvas.height - planeHeight) {
+                planeY += 8;
+                misilY += 8;
+
+            }
+            if (shut) {
+                misilY -= 20;
+            }
+            if (misilY < 0) {
+                misilY = planeY - 7;
+                misilX = planeX + planeWidht / 2 - 2;
+                shut = 0;
+            }
+
+            for (b = 0; b < cantEnemies; b++) {
+
+                if ((enemies[b].y > canvas.height && !enemies[b].died) ||
+                    (planeX < enemies[b].x + planeWidht && planeX > enemies[b].x && enemies[b].y + planeHeight > planeY && !enemies[b].died) ||
+                    (planeX + planeWidht > enemies[b].x && planeX + planeWidht < enemies[b].x + planeWidht && enemies[b].y + planeHeight > planeY && !enemies[b].died) ||
+                    (enemies[b].y + planeHeight >= planeY && enemies[b].x <= planeX + planeWidht && enemies[b].x >= planeX && !enemies[b].died) ||
+                    (enemies[b].y + planeHeight >= planeY && enemies[b].x + planeWidht >= planeX && enemies[b].x + planeWidht <= planeX + planeWidht && !enemies[b].died)) {
+
+                    drawText("GAME OVER");
+                    return;
+                }
+
+            }
+
+            requestAnimationFrame(draw);
+        }
+        makeEnemies();
+        draw();
+
+    </script>
+</body>
+
+</html>
